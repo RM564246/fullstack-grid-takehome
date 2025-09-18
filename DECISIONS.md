@@ -8,47 +8,76 @@ Please fill out this document with your design decisions and rationale as you im
 After reviewing [v7labs.com](https://v7labs.com):
 
 **What I liked:**
-- TODO: What aspects of their design appeal to you?
-- TODO: Which specific UI patterns would work well for a spreadsheet?
-- TODO: What makes their data presentation effective?
+- What aspects of their design appeal to you?
+  - Minimalist design with focus on the data not the platform
+- Which specific UI patterns would work well for a spreadsheet?
+  - Cell selection with clear visual feedback (border or background highlight)
+  - Inline cell editing (double-click, Enter, or F2 to edit)
+  - Keyboard navigation (arrow keys, Tab/Shift+Tab, Enter)
+  - Formula bar above the grid for editing/viewing the active cell
+  - Fixed headers for rows and columns (A, B, C... / 1, 2, 3...)
+  - Resizable columns and rows via drag handles
+  - Visual feedback for formula errors or invalid cells
+- What makes their data presentation effective?
+  - Minimalist design
 
 **What I would adapt differently:**
-- TODO: What doesn't translate well to spreadsheet UX?
-- TODO: What would you change for this use case?
+- What doesn't translate well to spreadsheet UX?
+  - Search Bar
+- What would you change for this use case?
+  - Search bar
+  - Make the cells smaller
 
 ### Paradigm Study  
 After reviewing [paradigm.co](https://paradigm.co):
 
 **What I liked:**
-- TODO: What design principles stand out?
-- TODO: How do they handle information density?
-- TODO: What about their typography/spacing system?
+- What design principles stand out?
+  - straightfoward design, contrasty colors, white space.
+- How do they handle information density?
+  - Info density looks low everywhere except when it comes to a single cell/card
+- What about their typography/spacing system?
+  - The Type is very modern and simple, the white space / low density stands out in a pleasing manner.
 
 **What I would adapt differently:**
-- TODO: What's too much for a spreadsheet interface?
-- TODO: Where would you simplify?
+- What's too much for a spreadsheet interface?
+  -  As much as the color schema is pleasing it can be too much for a spreadsheet.
+- Where would you simplify?
+  - Color Schema
 
 ### My Design Synthesis
 **How I'll blend both influences:**
-- TODO: What will you take from each?
-- TODO: What will be uniquely yours?
-- TODO: What's your color palette and why?
-- TODO: What's your typography strategy?
+- What will you take from each?
+  - The spreadsheet core from 'v7 labs' and their minimal design
+  - Use of white space / low density from 'paradigm' + Typography
+- What will be uniquely yours?
+  - Smaller window for the spreadsheet + More direct approach (MVP)
+- What's your color palette and why?
+  - I'll use something light, closer to v7 labs with a few spins of my own.
+- What's your typography strategy?
+  - San Serif to convey a more modern look and translate agility as the main idea for a spreadsheet on the browser
 
 ## Priority 1: Core Functionality Decisions
 
 ### Cell Selection
 **How will selection work?**
-- TODO: Single click behavior?
-- TODO: Visual feedback (border, background, both)?
-- TODO: How will you show the active cell?
+- Single click behavior?
+  - A single click selects a cell. To remove the selection press 'Esc'
+- Visual feedback (border, background, both)?
+  - I will use a very thin border and a lighter tone for the backgroud feedback
+- How will you show the active cell?
+  - The active cell will have a border of different collors than the others and display in the formula bar.
 
 ### Cell Editing
 **Your editing strategy:**
-- TODO: How does editing start? (double-click, F2, direct typing, all?)
-- TODO: What happens when user types directly?
-- TODO: How does editing end? (Enter, Tab, Esc, click away?)
-- TODO: Will you show different states for viewing vs editing?
+- How does editing start? (double-click, F2, direct typing, all?)
+  - One-click or double click.
+- What happens when user types directly?
+  - They overright the content previously in the cell.
+- How does editing end? (Enter, Tab, Esc, click away?)
+  - Esc cancels what was edited during this selection and keeps whaat was previously there, Enter commits the value to the sheet and selects the cell below, Tab commits the value and moves to the Cell in the next column.
+- Will you show different states for viewing vs editing?
+  - I'm not clear about this question, but one click shows the cell in the formular bar. If the user starts typing they overright the content.
 
 ### Keyboard Navigation  
 **Which keys do what?**
