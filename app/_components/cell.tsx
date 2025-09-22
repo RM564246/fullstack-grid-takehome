@@ -1,5 +1,5 @@
 import { CellAddress, Cell as ICell } from '@/types'
-import { memo, useEffect, useState, startTransition } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { useSheetStore } from '../_store/sheetStore'
 
 const getCommittedData = (data: ICell) => {
@@ -36,47 +36,46 @@ const Cell = memo(
   }) => {
     const sheet = useSheetStore((s) => s.sheet)
     const setSheet = useSheetStore((s) => s.setSheet)
-    const setError = useSheetStore((s) => s.setError)
-    const updateCell = useSheetStore((s) => s.updateCell)
-    const setCell = useSheetStore((s) => s.setCell)
-
-    const isSelected = useSheetStore((s) => s.selectedCell === cellAddr)
+    const selectedCell = useSheetStore((s) => s.selectedCell)
     const setSelectedCell = useSheetStore((s) => s.setSelectedCell)
     const setActiveContent = useSheetStore((s) => s.setActiveContent)
-    const isEditing = useSheetStore((s) => s.isEditing)
-    const setEditing = useSheetStore((s) => s.setEditing)
+    const updateCell = useSheetStore((s) => s.updateCell)
 
     const [status, setStatus] = useState<IStatus>(cellStatus.COMMITTED)
     const [content, setContent] = useState<string>('')
-    const singleClickRef = { current: null as number | null }
+    const inputRef = useRef<HTMLInputElement | null>(null)
+    const singleClickTimerRef = useRef<number | null>(null)
 
+    let isSelected = selectedCell === cellAddr
+
+    // Keep local content in sync with data when not editing
     useEffect(() => {
       if (status !== cellStatus.EDITING) {
-        setContent(getCommittedData(data))
+        const v = getCommittedData(data)
+        setContent(v)
       }
     }, [data, status])
 
+    // Focus and select input when selected
     useEffect(() => {
-      setStatus(
-        isEditing && isSelected
-          ? cellStatus.EDITING
-          : isSelected
-          ? cellStatus.OVERRIGHT
-          : cellStatus.COMMITTED,
-      )
-    }, [isEditing, isSelected])
+      if (isSelected) {
+        inputRef.current?.focus()
+        inputRef.current?.select()
+      }
+      setStatus(cellStatus.COMMITTED)
+    }, [isSelected])
 
     useEffect(() => {
       return () => {
-        if (singleClickRef.current) {
-          window.clearTimeout(singleClickRef.current)
-          singleClickRef.current = null
+        if (singleClickTimerRef.current) {
+          window.clearTimeout(singleClickTimerRef.current)
+          singleClickTimerRef.current = null
         }
       }
     }, [])
 
     const patchSheet = async (addr: CellAddress, input: string) => {
-      if (!sheet) return true
+      if (!sheet) return
       try {
         setUpdating(true)
         const isFormula = input.startsWith('=')
@@ -95,99 +94,95 @@ const Cell = memo(
         if (response.ok) {
           const data = await response.json()
           setSheet(data)
-          return true
         } else {
           const err = await response.json().catch(() => ({}))
           console.error('Patch failed', err)
-          setError(typeof err?.error === 'string' ? err.error : 'Failed to update sheet')
-          return false
         }
       } catch (error: any) {
         console.error('Failed to patch sheet:', error)
-        setError('Failed to update sheet')
-        return false
       } finally {
         setUpdating(false)
       }
     }
 
-    const handleSingleClick = () => {
-      if (singleClickRef.current) {
-        window.clearTimeout(singleClickRef.current)
-        singleClickRef.current = null
-      }
-      singleClickRef.current = window.setTimeout(() => {
-        startTransition(() => setSelectedCell(cellAddr))
-        const v = getCommittedData(data)
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = e.target.value
+      if (status === cellStatus.OVERRIGHT) {
         setContent(v)
-        setActiveContent(v)
-        setEditing(false)
+      }
+      setContent(v)
+      setActiveContent(v)
+    }
+
+    const handleSingleClick = () => {
+      if (singleClickTimerRef.current) {
+        window.clearTimeout(singleClickTimerRef.current)
+        singleClickTimerRef.current = null
+      }
+      singleClickTimerRef.current = window.setTimeout(() => {
+        setSelectedCell(cellAddr)
+
         setStatus(cellStatus.OVERRIGHT)
-        singleClickRef.current = null
+        singleClickTimerRef.current = null
       }, 200)
     }
 
     const handleDoubleClick = () => {
-      if (singleClickRef.current) {
-        window.clearTimeout(singleClickRef.current)
-        singleClickRef.current = null
+      if (singleClickTimerRef.current) {
+        window.clearTimeout(singleClickTimerRef.current)
+        singleClickTimerRef.current = null
       }
-      startTransition(() => setSelectedCell(cellAddr))
+      setSelectedCell(cellAddr)
       const v = getCommittedData(data)
       setContent(v)
       setActiveContent(v)
-      setEditing(true)
       setStatus(cellStatus.EDITING)
+      inputRef.current?.focus()
+      inputRef.current?.select()
     }
 
     const commitData = async () => {
-      const prevCell = sheet?.cells[cellAddr]
-      updateCell(cellAddr, content)
-      const ok = await patchSheet(cellAddr, content)
-      if (!ok) {
-        if (typeof prevCell === 'undefined') setCell(cellAddr, undefined)
-        else setCell(cellAddr, prevCell)
-      }
+      updateCell(cellAddr, content) // local update first
+      await patchSheet(cellAddr, content) // then server patch
       setStatus(cellStatus.COMMITTED)
-      setEditing(false)
     }
 
-    const display =
-      status === cellStatus.EDITING || status === cellStatus.OVERRIGHT
-        ? content
-        : getCommittedData(data)
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        commitData()
+        const match = cellAddr.match(/^([A-Z]+)(\d+)$/)
+        if (match) {
+          const col = match[1]
+          const row = parseInt(match[2], 10) + 1
+          const nextAddr = `${col}${row}` as CellAddress
+          setSelectedCell(nextAddr)
+          setStatus(cellStatus.COMMITTED)
+        }
+      }
+    }
 
     return (
-      <div
-        className={`relative ${
-          isSelected ? 'outline outline-1 outline-cyan-400' : ''
-        } ${
+      <input
+        className={`${isSelected ? 'border border-cyan-400' : ''} ${
           status === cellStatus.EDITING
-            ? 'bg-white'
+            ? 'bg-white caret-inherit'
             : status === cellStatus.OVERRIGHT
             ? 'bg-blue-50'
             : ''
-        } w-20 px-1 py-0.5 min-h-[1.75rem] overflow-hidden`}
+        } w-20 caret-transparent`}
+        ref={inputRef}
         onClick={handleSingleClick}
         onDoubleClick={handleDoubleClick}
-      >
-        {display}
-        {isEditing && isSelected && (
-          <input
-            className="absolute inset-0 w-full h-full bg-white px-1 py-0.5"
-            value={content}
-            onChange={(e) => {
-              setContent(e.target.value)
-              setActiveContent(e.target.value)
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') commitData()
-              if (e.key === 'Escape') setEditing(false)
-            }}
-            autoFocus
-          />
-        )}
-      </div>
+        onKeyDown={handleKeyDown}
+        onChange={handleChange}
+        value={
+          status === cellStatus.EDITING || status === cellStatus.OVERRIGHT
+            ? content
+            : getCommittedData(data)
+        }
+        key={cellAddr}
+        type="text"
+      />
     )
   },
 )

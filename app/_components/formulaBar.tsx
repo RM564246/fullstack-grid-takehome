@@ -8,8 +8,6 @@ const FormulaBar = memo(() => {
   const setActiveContent = useSheetStore((s) => s.setActiveContent)
   const updateCell = useSheetStore((s) => s.updateCell)
   const sheet = useSheetStore((s) => s.sheet)
-  const setSheet = useSheetStore((s) => s.setSheet)
-  const setError = useSheetStore((s) => s.setError)
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     return setActiveContent(e.target.value)
   }
@@ -17,7 +15,6 @@ const FormulaBar = memo(() => {
     if (e.key === 'Enter' && selectedCell && sheet) {
       e.preventDefault()
       // Optimistic local update
-      const prev = sheet.cells[selectedCell as CellAddress]
       updateCell(selectedCell, activeContent)
       // Patch server
       const isFormula = activeContent.startsWith('=')
@@ -36,20 +33,11 @@ const FormulaBar = memo(() => {
         })
         if (response.ok) {
           const data = await response.json()
+          const setSheet = useSheetStore.getState().setSheet
           setSheet(data)
-        } else {
-          // rollback
-          setError('Failed to update sheet')
-          setSheet({
-            ...sheet,
-            cells: { ...sheet.cells, [selectedCell]: prev },
-          })
         }
       } catch (err) {
         console.error('Failed to patch from FormulaBar', err)
-        // rollback
-        setError('Failed to update sheet')
-        setSheet({ ...sheet, cells: { ...sheet.cells, [selectedCell]: prev } })
       }
     }
   }
@@ -61,12 +49,7 @@ const FormulaBar = memo(() => {
       setActiveContent('')
       return
     }
-    const v =
-      cell.kind === 'literal'
-        ? String(cell.value)
-        : cell.kind === 'formula'
-        ? cell.src
-        : `#${cell.code}!`
+    const v = cell.kind === 'literal' ? String(cell.value) : cell.kind === 'formula' ? cell.src : `#${cell.code}!`
     setActiveContent(v)
   }, [selectedCell, sheet, setActiveContent])
 
@@ -76,7 +59,6 @@ const FormulaBar = memo(() => {
         <>
           <span>{selectedCell}</span>
           <input
-            className="rounded-md"
             disabled={!selectedCell}
             type="text"
             value={activeContent}
