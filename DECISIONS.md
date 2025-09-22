@@ -215,29 +215,45 @@ After reviewing [paradigm.co](https://paradigm.co):
 
 ### Proud Moments
 **What worked well:**
-- TODO: Best implementation detail?
-- TODO: Clever solution?
-- TODO: Clean abstraction?
+- Best implementation detail?
+  - the trick to handle Cell rendering as a div and only render a input over it when the Cell is selected
+- Clever solution?
+  - Optimized Cell rendering
+- Clean abstraction?
+  - The state management: zodstand
 
 ### Learning Experience
 **What you learned:**
-- TODO: New technique discovered?
-- TODO: What surprised you?
-- TODO: What would you do differently?
+- New technique discovered?
+  - I just loved build a spreadsheet, something I never done before
+- What surprised you?
+  - How a simple navigation control in a spreadsheet can be so tricky
+- What would you do differently?
+  - If I had more time to research I would definetly implement and use the helper functions, but I just didn't have the time
 
 ## Time Breakdown
 
 **How you spent your time:**
-- Setup & Planning: ??? minutes
-- Core Functionality: ??? minutes  
-- Visual Design: ??? minutes
-- Formula Engine: ??? minutes
-- Testing & Polish: ??? minutes
-- Documentation: ??? minutes
+- Setup & Planning: 20 min
+- Core Functionality: 180 minutes  
+- Visual Design: 10 minutes
+- Formula Engine: 0 minutes
+- Testing & Polish: 20 minutes
+- Documentation: 10 minutes
 
 **If you had 1 more hour:**
-- TODO: What would you add/fix/improve?
+- What would you add/fix/improve?
+  - polish navigation bugs taking better advantage of helper functions
 
 ## Final Notes
 
-TODO: Any additional thoughts, explanations, or context you want to share?
+Dear Ryan,
+
+I really enjoyed this challenge, and I believe even though the product is not 100% finished it is a good display of the techniques I can employ specially in the frontend. 
+I took advantage of some react techniques of optimization like useMemo and useCallback hooks, along with a memo wrapper. These help the tiny grid not get overloaded when the spreadsheets start scalling.
+With more time I would clean up the bugs in the navigation and editing features, and implement the Formulas in the spreadsheet. I would like to take more advantage of the helper functions, but I had a race against the clock so I didn't.
+The minimal design with only shades of gray, black and white are a personal choice based on the refferences and what I understand is the best design for a spreadsheet.
+I hope I have the chance to discuss any questions you might have about this challenge. 
+
+Best,
+Silas
