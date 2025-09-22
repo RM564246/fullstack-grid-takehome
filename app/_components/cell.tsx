@@ -162,7 +162,7 @@ const Cell = memo(
         : getCommittedData(data)
 
     // Handler to overwrite cell content
-    const handleKeyDownDiv = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const handleKeyDownDiv = async (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (status === cellStatus.OVERWRITE && isSelected && !isEditing) {
         // Ignore navigation keys
         if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -177,7 +177,7 @@ const Cell = memo(
           setEditing(true)
           setStatus(cellStatus.EDITING)
           e.preventDefault()
-        }
+        } 
       }
     }
 
